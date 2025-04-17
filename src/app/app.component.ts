@@ -4,36 +4,52 @@ import { RouterOutlet } from '@angular/router';
 import { Observable } from 'rxjs';
 import { Contact } from '../models/contact.model';
 import { AsyncPipe } from '@angular/common';
-import {FormControl, FormGroup, FormsModule,ReactiveFormsModule} from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, HttpClientModule,AsyncPipe,FormsModule,ReactiveFormsModule],
+  imports: [RouterOutlet, HttpClientModule, AsyncPipe, FormsModule, ReactiveFormsModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
 export class AppComponent {
   http = inject(HttpClient);
 
-   contactsForm = new FormGroup({
-    name : new FormControl<string>(''),
-    email:  new FormControl<string | null> (null),
-    phone : new FormControl<string>(''),
-    favourite : new FormControl<boolean>(false)
-   })
-contacts$ = this.getContacts();
+  contactsForm = new FormGroup({
+    Name: new FormControl<string>(''),
+    Email: new FormControl<string | null>(null),
+    Phone: new FormControl<string>(''),
+    Favourite: new FormControl<boolean>(false)
+  })
+  contacts$ = this.getContacts();
 
-onFormSubmit()
-{
-  const addContactRequest = {
-    name : this.contactsForm.value.name,
-    email : this.contactsForm.value.email,
-    phone : this.contactsForm.value.phone,
-    favourite: this.contactsForm.value.favourite,
+  onFormSubmit() {
+    console.log("entered");
+    const addContactRequest = [{
+      Name: this.contactsForm.value.Name,
+      Email: this.contactsForm.value.Email,
+      Phone: this.contactsForm.value.Phone,
+      Favourite: this.contactsForm.value.Favourite,
+    }];
+    this.http.post('https://localhost:7185/api/Contacts',addContactRequest)
+    .subscribe({
+      next: (value) => {
+        console.log(value);
+        this.contacts$ = this.getContacts();
+        this.contactsForm.reset();
+      },
+      error : (err) => {
+        console.error('Error response:' , err);
+        console.error('Validation errors',err.error.errors.$);
+        console.error('Reques errors',err.error.errors.request);
+      }
+    });
+    console.log(this.contactsForm.value)
   }
-  console.log(this.contactsForm.value)
-}
+
+
+
   private getContacts(): Observable<Contact[]> {
-   return this.http.get<Contact[]>('https://localhost:7185/api/Contacts')
+    return this.http.get<Contact[]>('https://localhost:7185/api/Contacts')
   }
 }
